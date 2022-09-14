@@ -25,16 +25,29 @@ class IO:
 
 class JsonLine(IO):
     @staticmethod
-    def load(path, use_tqdm=False):
+    def load(path, use_tqdm=False, datasize=-1):
+        print(f"load {path}...")
+
         with open(path) as rf:
-            lines = rf.read().splitlines()
-        if use_tqdm:
-            lines = tqdm(lines, ncols=100, desc='Load JsonLine')
-        return [json.loads(l) for l in lines]
+            if use_tqdm:
+                lines = tqdm(rf, ncols=100, desc='Load JsonLine')
+
+            if datasize == -1:
+                return [json.loads(l) for l in lines]
+            else:
+                pooled_data = []
+                for line in lines:
+                    if len(pooled_data) == datasize:
+                        break
+                    pooled_data.append(json.loads(line))
+                return pooled_data
 
     @staticmethod
-    def dump(instances, path):
+    def dump(instances, path, flush_steps=1000000):
         assert type(instances) == list
-        lines = [json.dumps(d, ensure_ascii=False) for d in instances]
         with open(path, 'w') as wf:
-            wf.write('\n'.join(lines))
+            for idx, instance in tqdm(enumerate(instances)):
+                instance = json.dumps(instance, ensure_ascii=False)
+                wf.write(instance + "\n")
+                if idx % flush_steps:
+                    wf.flush()

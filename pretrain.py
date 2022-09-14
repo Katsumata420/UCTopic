@@ -169,9 +169,14 @@ def _par_tokenize_doc(doc):
 
     entity_spans = [(entity[2], entity[3]) for entity in entities]
     entity_ids = [entity[1] for entity in entities]
-    tokenized_sent = tokenizer_glb(sentence,
-                                   entity_spans=entity_spans,
-                                   add_prefix_space=True)
+    try:
+        tokenized_sent = tokenizer_glb(sentence, entity_spans=entity_spans)
+    except IndexError as e:
+        print(e)
+        print("*"* 100)
+        print(sentence)
+        print(entities)
+        raise IndexError(e)
 
     return dict(tokenized_sent), entity_ids
 
@@ -288,21 +293,26 @@ def main():
             entity_pairs += sent_entity_pairs
         pool.close()
         pool.join()
-        print(f'Toal number of pairs: {len(entity_pairs)}')
+        print(f'Total number of pairs: {len(entity_pairs)}')
         random.shuffle(entity_pairs)
 
+        print(f"Save tokenized corpus to {path_tokenized_corpus}")
         utils.JsonLine.dump(tokenized_corpus, path_tokenized_corpus)
+        print(f"Save entity corpus to {path_entity_pairs}")
         utils.JsonLine.dump(entity_pairs, path_entity_pairs)
 
     tokenized_corpus = utils.JsonLine.load(path_tokenized_corpus, use_tqdm=True)
-    entity_pairs = utils.JsonLine.load(path_entity_pairs, use_tqdm=True)
+    entity_pairs = utils.JsonLine.load(path_entity_pairs, use_tqdm=True, datasize=1000000)
     print(f'Successfully load {len(tokenized_corpus)} sentences, and {len(entity_pairs)} entity_pairs.')
     
     model = UCTopicModel(model_args, config) 
     
-    train_dict = {'entity_pairs': entity_pairs[:-100000]}
-    dev_dict = {'entity_pairs': entity_pairs[-100000:]}
+    data_size = -100000
+    # data_size = -100
+    train_dict = {'entity_pairs': entity_pairs[:data_size]}
+    dev_dict = {'entity_pairs': entity_pairs[data_size:]}
 
+    print("create Dataset")
     train_dataset = Dataset.from_dict(train_dict)
     dev_dataset = Dataset.from_dict(dev_dict)
     
@@ -323,6 +333,7 @@ def main():
         model_path = model_args.model_name_or_path \
             if (model_args.model_name_or_path is not None and os.path.isdir(model_args.model_name_or_path)) else None
 
+        print("start train")
         train_result = trainer.train(model_path=model_path)
         trainer.save_model()  # Saves the tokenizer too for easy upload
 
@@ -341,7 +352,7 @@ def main():
     results = {}
     if training_args.do_eval:
         logger.info("*** Evaluate ***")
-        results = trainer.evaluate(eval_senteval_transfer=True)
+        results = trainer.evaluate()
 
         output_eval_file = os.path.join(training_args.output_dir, "eval_results.txt")
         if trainer.is_world_process_zero():
