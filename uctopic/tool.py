@@ -8,7 +8,7 @@ import numpy as np
 from numpy import ndarray
 from collections import defaultdict, Counter
 from .models import UCTopicCluster
-from .tokenizer import UCTopicTokenizer
+from .tokenizer import UCTopicJapaneseTokenizer, UCTopicTokenizer
 from sklearn.metrics.pairwise import cosine_similarity
 from typing import List, Dict, Tuple, Type, Union
 
@@ -20,9 +20,13 @@ class UCTopicTool(object):
     def __init__(self, model_name_or_path: str, 
                        device: str = None,
                        num_cells: int = 100,
-                       num_cells_in_search: int = 10):
+                       num_cells_in_search: int = 10,
+                       tokenizer_type: str = "ja"):
         
-        self.tokenizer = UCTopicTokenizer.from_pretrained(model_name_or_path)
+        if tokenizer_type == "ja":
+            self.tokenizer = UCTopicJapaneseTokenizer.from_pretrained(model_name_or_path)
+        else:
+            self.tokenizer = UCTopicTokenizer.from_pretrained(model_name_or_path)
         self.model = UCTopicCluster.from_pretrained(model_name_or_path)
         self.config = self.model.config
 
@@ -80,7 +84,7 @@ class UCTopicTool(object):
                     text_batch.append(instance[0])
                     span_batch.append([instance[1]])
 
-                inputs = self.tokenizer(text_batch, entity_spans=span_batch, padding=True, truncation=True, add_prefix_space=True, return_tensors="pt")
+                inputs = self.tokenizer(text_batch, entity_spans=span_batch, padding=True, truncation=True, return_tensors="pt")
                 inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
                 luke_outputs, phrase_repr = self.model(**inputs)
@@ -128,7 +132,7 @@ class UCTopicTool(object):
                     text_batch.append(instance[0])
                     span_batch.append([instance[1]])
 
-                inputs = self.tokenizer(text_batch, entity_spans=span_batch, padding=True, truncation=True, add_prefix_space=True, return_tensors="pt")
+                inputs = self.tokenizer(text_batch, entity_spans=span_batch, padding=True, truncation=True, return_tensors="pt")
                 inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
                 luke_outputs, phrase_repr = self.model(**inputs)

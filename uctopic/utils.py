@@ -4,12 +4,13 @@ from numpy import ndarray
 from tqdm import tqdm
 from multiprocessing import Pool
 
+
+spacy_model_name = "ja_ginza"
+
 try:
-    NLP = spacy.load('en_core_web_sm', disable=['ner', 'token2vec'])
+    NLP = spacy.load(spacy_model_name, disable=['ner', 'token2vec'])
 except:
-    import os
-    os.system("python -m spacy download en_core_web_sm")
-    NLP = spacy.load('en_core_web_sm', disable=['ner', 'token2vec'])
+    raise ValueError(f"Can't load spacy model ({spacy_model_name}).")
 
 class NounPhraser:
     @staticmethod
@@ -113,7 +114,7 @@ class Lemmatizer:
     @staticmethod
     def normalize(text):
         doc = NLP(text)
-        return ' '.join([token.lemma_.lower().strip() for token in doc])
+        return ' '.join([token.lemma_.strip() for token in doc])
 
 
 def get_rankings(scores: ndarray, positive_ratio: float = 0.8):

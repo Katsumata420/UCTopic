@@ -49,11 +49,11 @@ class UCTopicConfig(LukeConfig):
             type_vocab_size,
             initializer_range,
             layer_norm_eps,
-            gradient_checkpointing,
             use_entity_aware_attention,
-            pad_token_id,
-            bos_token_id,
-            eos_token_id,
+            pad_token_id=pad_token_id,
+            bos_token_id=bos_token_id,
+            eos_token_id=eos_token_id,
+            gradient_checkpointing=gradient_checkpointing,
             **kwargs
         )
         # for contrastive learning
