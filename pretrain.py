@@ -15,13 +15,15 @@ from itertools import combinations
 
 import transformers
 from transformers import (
+    AddedToken,
     CONFIG_MAPPING,
     MODEL_FOR_MASKED_LM_MAPPING,
     AutoConfig,
     AutoTokenizer,
     HfArgumentParser,
     TrainingArguments,
-    set_seed
+    set_seed,
+    LukeJapaneseTokenizer,
 )
 from transformers.trainer_utils import is_main_process
 from uctopic.models import UCTopicModel
@@ -170,6 +172,8 @@ def _par_tokenize_doc(doc):
     entity_spans = [(entity[2], entity[3]) for entity in entities]
     entity_ids = [entity[1] for entity in entities]
     try:
+        # LukeJapaneseTokenizer を使う場合はコメントアウト
+        # tokenized_sent = tokenizer_glb(sentence, entity_spans=entity_spans, return_token_type_ids=False)
         tokenized_sent = tokenizer_glb(sentence, entity_spans=entity_spans)
     except IndexError as e:
         print(e)
@@ -255,13 +259,22 @@ def main():
             "You are instantiating a new tokenizer from scratch. This is not supported by this script."
             "You can do it from another script, save it, and load it from here, using --tokenizer_name."
         )
+    """
+    # LukeJapaneseTokenizer を使う場合はコメントアウト
+    tokenizer = LukeJapaneseTokenizer.from_pretrained(model_args.model_name_or_path)
+    bos_token = "[CLS]"
+    eos_token = "[SEP]"
+    tokenizer.bos_token = AddedToken(bos_token, lstrip=False, rstrip=False)
+    tokenizer.eos_token = AddedToken(eos_token, lstrip=False, rstrip=False)
+    """
+
     global tokenizer_glb
     tokenizer_glb = tokenizer
 
     # preprocess corpus
     path_corpus = Path(data_args.train_file)
     dir_corpus = path_corpus.parent
-    dir_preprocess = dir_corpus / 'preprocess'
+    dir_preprocess = dir_corpus / 'preprocess-jaluke-exclude'
     dir_preprocess.mkdir(exist_ok=True)
 
     path_tokenized_corpus = dir_preprocess / f'tokenized_{path_corpus.name}'

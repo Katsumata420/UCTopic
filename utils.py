@@ -31,6 +31,8 @@ class JsonLine(IO):
         with open(path) as rf:
             if use_tqdm:
                 lines = tqdm(rf, ncols=100, desc='Load JsonLine')
+            else:
+                lines = rf
 
             if datasize == -1:
                 return [json.loads(l) for l in lines]
