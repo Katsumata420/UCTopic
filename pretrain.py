@@ -23,7 +23,7 @@ from transformers import (
     HfArgumentParser,
     TrainingArguments,
     set_seed,
-    LukeJapaneseTokenizer,
+#     LukeJapaneseTokenizer,  # LukeJapaneseTokenizer を使う場合はコメントアウト
 )
 from transformers.trainer_utils import is_main_process
 from uctopic.models import UCTopicModel
