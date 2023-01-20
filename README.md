@@ -1,3 +1,5 @@
+If you want to pretrain the new model, see [README-PRETRAIN.md](./README-PRETRAIN.md).
+
 # UCTopic
 
 This repository contains the code of model UCTopic and an easy-to-use tool UCTopicTool used for <strong>Topic Mining</strong>, <strong>Unsupervised Aspect Extractioin</strong> or <strong>Phrase Retrieval</strong>.
